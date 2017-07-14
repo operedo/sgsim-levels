@@ -1561,12 +1561,8 @@ c                        if(nclose.gt.ndmax) nclose = ndmax
                   cnodeid(:)=-1
                   ncnode=0
 
-c                  call srchnd(ix,iy,iz)
-c      call srchnd(ix,iy,iz,MAXNOD,MAXXYZ,MXYZ,ncnode,
-c      call srchndPushOMP(ix,iy,iz,MAXNOD,MAXXYZ,MXYZ,ncnode,
-c      call srchndpushc(ix,iy,iz,MAXNOD,MAXXYZ,MXYZ,ncnode,
-      call srchndPush(ix,iy,iz,MAXNOD,MAXXYZ,MXYZ,ncnode,
 c      call srchndPushOpt(ix,iy,iz,MAXNOD,MAXXYZ,MXYZ,ncnode,
+      call srchndPush(ix,iy,iz,MAXNOD,MAXXYZ,MXYZ,ncnode,
      +        nctx,ncty,nctz,nlooku,nodmax,nx,ny,nz,nxy,noct,
      +        UNEST,xmn,ymn,zmn,xsiz,ysiz,zsiz,icnode,
      +        ixnode,iynode,iznode,cnodex,cnodey,cnodez,cnodev,sim,
@@ -2795,123 +2791,6 @@ c Return to calling program:
 c
       return
       end
-
-
-
-
-      subroutine srchndPushOMP(ix,iy,iz,MAXNOD,MAXXYZ,MXYZ,ncnode,
-     +        nctx,ncty,nctz,nlooku,nodmax,nx,ny,nz,nxy,noct,
-     +        UNEST,
-     +        xmn,ymn,zmn,xsiz,ysiz,zsiz,icnode,ixnode,iynode,iznode,
-     +        cnodex,cnodey,cnodez,cnodev,sim,cnodeid)
-
-
-
-c-----------------------------------------------------------------------
-c
-c               Search for nearby Simulated Grid nodes
-c               **************************************
-c
-c The idea is to spiral away from the node being simulated and note all
-c the nearby nodes that have been simulated.
-c
-c
-c
-c INPUT VARIABLES:
-c
-c   ix,iy,iz        index of the point currently being simulated
-c   sim             the realization so far
-c   nodmax          the maximum number of nodes that we want
-c   nlooku          the number of nodes in the look up table
-c   i[x,y,z]node    the relative indices of those nodes.
-c   [x,y,z]mn       the origin of the global grid netwrok
-c   [x,y,z]siz      the spacing of the grid nodes.
-c
-c
-c
-c OUTPUT VARIABLES:
-c
-c   ncnode          the number of close nodes
-c   icnode()        the number in the look up table
-c   cnode[x,y,z]()  the location of the nodes
-c   cnodev()        the values at the nodes
-c
-c
-c
-c-----------------------------------------------------------------------
-c      use       geostat
-c      include  'sgsim.inc'
-
-
-      implicit none
-
-      integer ix,iy,iz,MAXNOD,MAXXYZ,MXYZ,ncnode,
-     +        nctx,ncty,nctz,nlooku,nodmax,nx,ny,nz,nxy,noct 
-      real    UNEST,xmn,ymn,zmn,xsiz,ysiz,zsiz
-      integer icnode(MAXNOD)
-      integer*2 ixnode(MAXXYZ),iynode(MAXXYZ),
-     +        iznode(MAXXYZ)
-      real    cnodex(MAXNOD),cnodey(MAXNOD),cnodez(MAXNOD),
-     + cnodev(MAXNOD),sim(MXYZ)
-      integer cnodeid(MAXNOD)
-
-      integer i,j,k,il,ind,idx,idy,idz,iq
-      integer threadId
-
-      integer   ninoct(8)
-c
-c Consider all the nearby nodes until enough have been found:
-c
-      ncnode = 0
-c      if(noct.gt.0) then
-c            do i=1,8
-c                  ninoct(i) = 0
-c            end do
-c      end if
-
-
-c$omp parallel default(shared)
-c$omp& firstprivate(
-c$omp&        il,i,j,k,ind
-c$omp&        )
-
-c#ifdef _OPENMP
-c            threadId=OMP_get_thread_num()+1
-c#else
-c            threadId=1
-c#endif
-
-c$omp do schedule(static,1)
-      do il=2,nlooku
-c            if(ncnode.eq.nodmax) return
-            i = ix + (int(ixnode(il))-nctx-1)
-            j = iy + (int(iynode(il))-ncty-1)
-            k = iz + (int(iznode(il))-nctz-1)
-            if(i.lt. 1.or.j.lt. 1.or.k.lt. 1) then
-               go to 2
-            end if
-            if(i.gt.nx.or.j.gt.ny.or.k.gt.nz) then
-               go to 2
-            end if
-            ind = i + (j-1)*nx + (k-1)*nxy
-            if(sim(ind).gt.UNEST) then
-                  ncnode = ncnode + 1
-c                  cnodeid(ncnode) = ind
-c                  icnode(ncnode) = il
-               continue
-            endif
-
- 2    continue
-      end do
-c$omp end do
-c$omp end parallel
-
-c
-c Return to calling program:
-c
-      return
-      end
-
 
 
       subroutine srchndPop(ix,iy,iz,MAXNOD,MAXXYZ,MXYZ,ncnode,
