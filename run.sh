@@ -1,12 +1,13 @@
 #for domain in 800x800x160 400x800x160
-for domain in 400x800x160
+for domain in 800x800x160
 do
 
-for neig in 16 32 64 128 
+#for neig in 16 32 64 128 
+for neig in 128 
 do
 
-for proc in 16
-#for proc in 16 8 4 2 1
+#for proc in 16
+for proc in 16 8 4 2 1
 do
 	export OMP_NUM_THREADS=$proc
 	/usr/bin/time ./sgsimFortranLevelsPar.exe  sgsim-extreme-${neig}-${domain}.par > salida_par_${proc}.txt 2>&1 
