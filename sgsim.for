@@ -1107,6 +1107,12 @@ c-----------------------------------------------------------------------
       real      var(10)
       real*8    p,acorni,cp,oldcp,w
       logical   testind
+
+      integer clock_max
+      integer clock_rate
+      integer clock_start
+      integer clock_stop
+
 c
 c Set up the rotation/anisotropy matrices that are needed for the
 c variogram and search.
@@ -1259,8 +1265,15 @@ c
 c
 c MAIN LOOP OVER ALL THE NODES:
 c
+            call system_clock(clock_start,clock_rate,clock_max)
             do in=1,nxyz
-                  if((int(in/irepo)*irepo).eq.in) write(*,103) in
+                  if((int(in/irepo)*irepo).eq.in) then
+                     write(*,103) in
+            call system_clock(clock_stop,clock_rate,clock_max)
+            print *,'TIME ',
+     +    real(clock_stop-clock_start,kind=8)/real(clock_rate,kind=8) 
+
+                  end if
  103              format('   currently on node ',i9)
 c
 c Figure out the location of this point and make sure it has
